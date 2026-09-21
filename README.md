@@ -1,0 +1,149 @@
+<p align="center">
+  <img src="docs/images/logo.png?raw=true" alt="ValkeyLens Logo" width="130" style="border-radius: 24px;" />
+</p>
+
+<h1 align="center">ValkeyLens</h1>
+
+<p align="center">
+  <a href="https://github.com/alexandrmotologa/valkey-lens/releases"><img src="https://img.shields.io/github/v/release/alexandrmotologa/valkey-lens?color=0284c7&label=Release" alt="Release" /></a>
+  <a href="https://golang.org"><img src="https://img.shields.io/badge/Go-1.23+-00ADD8?logo=go&logoColor=white" alt="Go Version" /></a>
+  <a href="https://react.dev"><img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black" alt="React 19" /></a>
+  <a href="https://valkey.io"><img src="https://img.shields.io/badge/Engine-Valkey%208%20%7C%20Redis%207+-00f5ff" alt="Engine" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-slate" alt="License" /></a>
+</p>
+
+ValkeyLens is a single-binary management studio, non-blocking memory profiler, and data workbench built for Valkey 8 and Redis 7+. It compiles an embedded React 19 interface directly into a self-contained Go executable, using under 25MB of RAM at idle and requiring no external runtimes.
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                          ValkeyLens Architecture                        │
+└─────────────────────────────────────────────────────────────────────────┘
+
+[ Web Browser / Local Desktop Client ] (http://localhost:63790)
+              │
+              ▼  (HTTP REST / Server-Sent Events / WebSockets)
+[ ValkeyLens Single Binary ] (Go 1.23+ Engine)
+  ├── Static Asset Server: go:embed (Vite + React 19 + Monaco / CodeMirror)
+  ├── API Gateway & Safety Interceptor
+  │     ├── Read-Only Mode Guard (--read-only)
+  │     ├── Command Interceptor (Blocks dangerous KEYS *, FLUSHALL, FLUSHDB)
+  │     └── Rate-Limited Asynchronous Worker Pool
+  ├── Storage & Driver Abstraction
+  │     ├── Valkey 8 / Redis 7 Connection Pool (valkey-go / rueidis)
+  │     ├── Embedded In-Memory Mock Engine (--demo)
+  │     ├── RESP3 Protocol Engine & Pipeline Batcher
+  │     └── Cluster & Sentinel Topology Resolver
+  └── Core Modules
+        ├── Key Space Explorer (Cursor SCAN, Pattern Filter, TTL Manager)
+        ├── Non-Blocking Memory Profiler (Sampling, Radix Tree, Big Keys Heap)
+        ├── Stream & Consumer Group Engine (PEL, Lag Calculation, Event Stream)
+        ├── Telemetry & Slowlog Monitor (INFO parsing, CPU/RAM, Ops/sec, Slowlog)
+        └── Embedded REPL Engine (Interactive CLI, Autocomplete, History)
+              │
+              ▼ (TCP / TLS / Unix Socket)
+[ Valkey 8.x / Redis 7.x / Dragonfly / KeyDB Instance or Cluster ]
+```
+
+## Features
+
+- **Safe non-blocking scans**: Uses cursor-based `SCAN` pipelining to browse keys. Commands like `KEYS *`, `FLUSHALL`, and `FLUSHDB` are intercepted and blocked or replaced with streaming scans.
+- **Visual memory profiler**: Aggregates keys into namespace trees using configurable delimiters (`:`, `/`, `.`). Identifies which prefixes occupy the most RAM without stalling the server.
+- **Top 100 big keys**: Ranks the largest keys in the dataset using non-blocking memory sampling and serialized length estimation.
+- **Stream inspector**: Inspects Valkey/Redis Streams, consumer groups, pending entries (PEL), and consumer lag in real time.
+- **Vector search and JSON workbench**: Visualizes structured JSON documents with collapsible tree views and enables similarity queries on vector fields.
+- **Live telemetry**: Streams instantaneous ops/sec, memory fragmentation, client counts, and real-time slow log entries over Server-Sent Events at 1Hz.
+- **Web REPL**: An in-browser terminal with RESP3 syntax coloring, command autocomplete, and parameter hints.
+- **Demo mode**: Run `valkeylens --demo` to test drive the studio with a pre-seeded dataset without connecting to an external server.
+- **Headless memory audit**: Audit remote keyspaces in CI/CD pipelines and export structured JSON or self-contained HTML reports.
+
+## Installation
+
+### Pre-built binaries
+
+Download the latest release for your platform from the [GitHub Releases](https://github.com/alexandrmotologa/valkey-lens/releases) page:
+
+- Linux (`x86_64`, `arm64`)
+- macOS (`Apple Silicon`, `Intel`)
+- Windows (`x86_64`)
+
+### Go install
+
+```bash
+go install github.com/alexandrmotologa/valkey-lens@latest
+```
+
+### Build from source
+
+Prerequisites: Go 1.23+ and Node.js 20+.
+
+```bash
+git clone https://github.com/alexandrmotologa/valkey-lens.git
+cd valkey-lens
+make build
+./bin/valkeylens
+```
+
+## Quick Start
+
+Start ValkeyLens connected to a local Valkey or Redis instance:
+
+```bash
+valkeylens
+```
+
+Start in demo mode with sample data:
+
+```bash
+valkeylens --demo
+```
+
+Connect to a remote server with password authentication:
+
+```bash
+valkeylens -u "valkey://:secret@cache.internal:6379/0"
+```
+
+Connect to a cluster:
+
+```bash
+valkeylens --cluster --nodes "node1:6379,node2:6379,node3:6379"
+```
+
+Start in read-only mode on a custom port:
+
+```bash
+valkeylens -u "redis://prod-db:6379" --read-only --port 8080
+```
+
+Run a headless memory audit and export the results:
+
+```bash
+valkeylens audit -u "valkey://127.0.0.1:6379" --export report.json --top 50
+```
+
+## Command Line Options
+
+| Flag | Short | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `--url` | `-u` | `valkey://127.0.0.1:6379` | Server connection URL (`valkey://`, `redis://`, `valkeys://`) |
+| `--port` | `-p` | `63790` | Web server port |
+| `--host` | `-h` | `127.0.0.1` | Web server bind address |
+| `--read-only` | `-r` | `false` | Block mutating commands (`SET`, `DEL`, `FLUSHDB`) |
+| `--demo` | | `false` | Launch with embedded mock database and sample datasets |
+| `--cluster` | | `false` | Enable cluster mode discovery |
+| `--nodes` | | `""` | Comma-separated list of cluster seed nodes |
+| `--tls-ca` | | `""` | Path to custom TLS CA certificate file |
+| `--no-browser` | | `false` | Skip opening default browser on startup |
+| `--version` | `-v` | | Print version and build information |
+
+## Documentation
+
+- [Architecture Overview](docs/ARCHITECTURE.md)
+- [Memory Profiling Algorithm](docs/MEMORY_PROFILING.md)
+- [Production Safety & Guard Rules](docs/PRODUCTION_SAFETY.md)
+- [Streams & Consumer Groups](docs/STREAMS_AND_CONSUMER_GROUPS.md)
+- [REPL & Headless CLI Audit](docs/REPL_AND_CLI.md)
+
+## License
+
+MIT License. See [LICENSE](LICENSE) for details.
