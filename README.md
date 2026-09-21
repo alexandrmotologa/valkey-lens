@@ -44,6 +44,28 @@ ValkeyLens is a single-binary management studio, non-blocking memory profiler, a
 [ Valkey 8.x / Redis 7.x / Dragonfly / KeyDB Instance or Cluster ]
 ```
 
+## Studio Tour
+
+<p align="center">
+  <img src="docs/images/valkeylens_demo.gif?raw=true" alt="ValkeyLens Management Studio Demo" width="880" style="border-radius: 12px; border: 1px solid #1e293b;" />
+</p>
+
+### Keyspace Explorer & Memory Profiler
+
+<p align="center">
+  <img src="docs/images/screenshot_dashboard.png?raw=true" alt="ValkeyLens Keyspace Explorer" width="435" />
+  &nbsp;
+  <img src="docs/images/screenshot_memory_profiler.png?raw=true" alt="ValkeyLens Non-Blocking Memory Profiler" width="435" />
+</p>
+
+### Stream PEL Inspector & Live 1Hz Telemetry
+
+<p align="center">
+  <img src="docs/images/screenshot_streams.png?raw=true" alt="ValkeyLens Stream Inspector" width="435" />
+  &nbsp;
+  <img src="docs/images/screenshot_telemetry.png?raw=true" alt="ValkeyLens Live Telemetry Monitor" width="435" />
+</p>
+
 ## Features
 
 - **Safe non-blocking scans**: Uses cursor-based `SCAN` pipelining to browse keys. Commands like `KEYS *`, `FLUSHALL`, and `FLUSHDB` are intercepted and blocked or replaced with streaming scans.
