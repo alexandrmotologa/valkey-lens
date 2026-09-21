@@ -50,32 +50,52 @@ ValkeyLens is a single-binary management studio, non-blocking memory profiler, a
   <img src="docs/images/valkeylens_demo.gif?raw=true" alt="ValkeyLens Management Studio Demo" width="880" style="border-radius: 12px; border: 1px solid #1e293b;" />
 </p>
 
-### Keyspace Explorer & Memory Profiler
+### Keyspace Explorer & Global Command Palette (Ctrl+K)
 
 <p align="center">
   <img src="docs/images/screenshot_dashboard.png?raw=true" alt="ValkeyLens Keyspace Explorer" width="435" />
   &nbsp;
-  <img src="docs/images/screenshot_memory_profiler.png?raw=true" alt="ValkeyLens Non-Blocking Memory Profiler" width="435" />
+  <img src="docs/images/screenshot_command_palette.png?raw=true" alt="ValkeyLens Command Palette" width="435" />
 </p>
 
-### Stream PEL Inspector & Live 1Hz Telemetry
+### Memory Profiler & Automated Advisor & Traffic Sampler
 
 <p align="center">
-  <img src="docs/images/screenshot_streams.png?raw=true" alt="ValkeyLens Stream Inspector" width="435" />
+  <img src="docs/images/screenshot_memory_profiler.png?raw=true" alt="ValkeyLens Memory Profiler & Advisor" width="435" />
   &nbsp;
-  <img src="docs/images/screenshot_telemetry.png?raw=true" alt="ValkeyLens Live Telemetry Monitor" width="435" />
+  <img src="docs/images/screenshot_traffic.png?raw=true" alt="ValkeyLens Safe Traffic Sampler" width="435" />
+</p>
+
+### Client Manager & Live Pub/Sub Sniffer
+
+<p align="center">
+  <img src="docs/images/screenshot_clients.png?raw=true" alt="ValkeyLens Client Manager" width="435" />
+  &nbsp;
+  <img src="docs/images/screenshot_pubsub.png?raw=true" alt="ValkeyLens Pub/Sub Sniffer" width="435" />
+</p>
+
+### Cluster Topology & 16,384 Hash Slot Visualizer
+
+<p align="center">
+  <img src="docs/images/screenshot_cluster.png?raw=true" alt="ValkeyLens Cluster Topology Map" width="880" />
 </p>
 
 ## Features
 
 - **Safe non-blocking scans**: Uses cursor-based `SCAN` pipelining to browse keys. Commands like `KEYS *`, `FLUSHALL`, and `FLUSHDB` are intercepted and blocked or replaced with streaming scans.
-- **Visual memory profiler**: Aggregates keys into namespace trees using configurable delimiters (`:`, `/`, `.`). Identifies which prefixes occupy the most RAM without stalling the server.
-- **Top 100 big keys**: Ranks the largest keys in the dataset using non-blocking memory sampling and serialized length estimation.
+- **Global Command Palette (`Ctrl+K` / `Cmd+K`)**: Instant keyboard-driven navigation across all 9 studio views, quick actions for key creation, memory audits, traffic sampling, and REPL commands.
+- **Visual memory profiler & Big Keys**: Aggregates keys into namespace trees using configurable delimiters (`:`, `/`, `.`). Identifies which prefixes occupy the most RAM without stalling the server, plus ranks the Top 100 biggest keys.
+- **Automated Memory Optimization Advisor**: Analyzes keyspace heuristics to surface memory leaks, large uncompressed strings, missing TTLs, and idle caches with copyable one-click CLI remediation fixes.
+- **Safe Throttled Traffic Sampler**: Bounded `MONITOR` session with guaranteed auto-kill timeouts and count limits. Automatically classifies commands into `READ`, `WRITE`, `SCAN`, and `ADMIN` categories and identifies real-time Hot Keys.
+- **Client Connection Manager**: Real-time client inspection parsing `CLIENT LIST`, monitoring input/output buffer memory bloat, idle times, and enabling targeted `CLIENT KILL` with safety confirmations.
+- **Pub/Sub Live Sniffer & Dispatcher**: Live streaming of published messages over Server-Sent Events across channels and patterns, coupled with an interactive message dispatcher.
+- **Cluster Topology & 16,384 Hash Slot Visualizer**: Visualizes shard distribution, master-replica hierarchies, and includes a real-time CRC16 `{hash_tag}` slot calculator.
+- **Interactive JSON Tree Viewer**: Expandable and collapsible tree visualization for structured JSON documents with JSONPath searching, data type badges, and sub-tree copying.
+- **Key Duplication & `.redis` CLI Exporter**: One-click key cloning with preserved TTLs, plus bulk export of matched keyspaces into pipeline-ready `.redis` CLI scripts.
 - **Stream inspector**: Inspects Valkey/Redis Streams, consumer groups, pending entries (PEL), and consumer lag in real time.
-- **Vector search and JSON workbench**: Visualizes structured JSON documents with collapsible tree views and enables similarity queries on vector fields.
-- **Live telemetry**: Streams instantaneous ops/sec, memory fragmentation, client counts, and real-time slow log entries over Server-Sent Events at 1Hz.
+- **Live telemetry & Slowlog Analyzer**: Streams instantaneous ops/sec, memory fragmentation, client counts, and real-time slow log entries over Server-Sent Events at 1Hz.
 - **Web REPL**: An in-browser terminal with RESP3 syntax coloring, command autocomplete, and parameter hints.
-- **Demo mode**: Run `valkeylens --demo` to test drive the studio with a pre-seeded dataset without connecting to an external server.
+- **Demo mode**: Run `valkeylens --demo` to test drive the entire studio with pre-seeded datasets without connecting to an external server.
 - **Headless memory audit**: Audit remote keyspaces in CI/CD pipelines and export structured JSON or self-contained HTML reports.
 
 ## Installation

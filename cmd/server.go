@@ -12,11 +12,15 @@ import (
 	"time"
 
 	"github.com/alexandrmotologa/valkey-lens/pkg/client"
+	"github.com/alexandrmotologa/valkey-lens/pkg/clients"
+	"github.com/alexandrmotologa/valkey-lens/pkg/cluster"
 	"github.com/alexandrmotologa/valkey-lens/pkg/explorer"
 	"github.com/alexandrmotologa/valkey-lens/pkg/profiler"
+	"github.com/alexandrmotologa/valkey-lens/pkg/pubsub"
 	"github.com/alexandrmotologa/valkey-lens/pkg/repl"
 	"github.com/alexandrmotologa/valkey-lens/pkg/streams"
 	"github.com/alexandrmotologa/valkey-lens/pkg/telemetry"
+	"github.com/alexandrmotologa/valkey-lens/pkg/traffic"
 	"github.com/alexandrmotologa/valkey-lens/server"
 )
 
@@ -54,11 +58,16 @@ func runServer() error {
 	// Initialize subsystems
 	scanner := explorer.NewScanner(dbClient)
 	crud := explorer.NewCRUDManager(dbClient)
+	exporter := explorer.NewScriptExporter(dbClient, scanner, crud)
 	prof := profiler.NewProfiler(dbClient)
 	inspector := streams.NewInspector(dbClient)
 	monitor := telemetry.NewMonitor(dbClient)
 	slowlog := telemetry.NewSlowlogTracker(dbClient)
 	evaluator := repl.NewEvaluator(dbClient)
+	clientsMgr := clients.NewManager(dbClient)
+	sampler := traffic.NewSampler(dbClient)
+	broker := pubsub.NewBroker(dbClient)
+	resolver := cluster.NewResolver(dbClient)
 
 	// Start live telemetry polling
 	monitor.Start(ctx)
@@ -69,11 +78,16 @@ func runServer() error {
 		Client:    dbClient,
 		Scanner:   scanner,
 		CRUD:      crud,
+		Exporter:  exporter,
 		Profiler:  prof,
 		Inspector: inspector,
 		Monitor:   monitor,
 		Slowlog:   slowlog,
 		Evaluator: evaluator,
+		Clients:   clientsMgr,
+		Sampler:   sampler,
+		Broker:    broker,
+		Cluster:   resolver,
 		AssetFS:   AssetFS,
 		Version:   Version,
 		Options:   opts,

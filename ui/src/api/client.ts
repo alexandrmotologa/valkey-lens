@@ -41,6 +41,16 @@ export interface BigKeyEntry {
   namespace: string;
 }
 
+export interface OptimizationInsight {
+  id: string;
+  category?: string;
+  severity: string;
+  title: string;
+  description: string;
+  estimated_reclaimable: string;
+  remediation_command?: string;
+}
+
 export interface ProfileReport {
   timestamp: string;
   scanned_keys: number;
@@ -49,6 +59,7 @@ export interface ProfileReport {
   namespaces: NamespaceNode[];
   big_keys: BigKeyEntry[];
   leak_alerts?: string[];
+  insights?: OptimizationInsight[];
 }
 
 export interface StreamMessage {
@@ -152,6 +163,92 @@ export interface ConnectionProfile {
   color: string;
 }
 
+// 2.0 Feature Pack Models
+export interface ClientInfo {
+  id: number;
+  addr: string;
+  name: string;
+  age_sec: number;
+  idle_sec: number;
+  flags: string;
+  db: number;
+  cmd: string;
+  omem_bytes: number;
+  tot_mem_bytes: number;
+  user: string;
+  connected_at: string;
+}
+
+export interface TrafficSampledCommand {
+  timestamp: string;
+  db: number;
+  client_ip: string;
+  command: string;
+  key: string;
+  category: string;
+}
+
+export interface HotKeyCount {
+  key: string;
+  count: number;
+}
+
+export interface TrafficSummary {
+  duration_ms: number;
+  total_commands: number;
+  commands_per_sec: number;
+  categories: Record<string, number>;
+  hot_keys: HotKeyCount[];
+  recent_commands: TrafficSampledCommand[];
+}
+
+export interface PubSubMessage {
+  id: number;
+  channel: string;
+  pattern?: string;
+  payload: string;
+  length: number;
+  timestamp: string;
+  is_json: boolean;
+}
+
+export interface SlotRange {
+  start: number;
+  end: number;
+}
+
+export interface ClusterNode {
+  id: string;
+  address: string;
+  flags: string;
+  role: 'master' | 'replica';
+  master_id?: string;
+  ping_sent: number;
+  pong_recv: number;
+  config_epoch: number;
+  link_state: string;
+  slots: SlotRange[];
+  slot_count: number;
+}
+
+export interface TopologyReport {
+  nodes: ClusterNode[];
+  total_nodes: number;
+  master_count: number;
+  replica_count: number;
+  assigned_slots: number;
+  cluster_state: string;
+  is_cluster: boolean;
+}
+
+export interface SlotLookupResult {
+  key: string;
+  hash_tag?: string;
+  slot: number;
+  node_id?: string;
+  node_addr?: string;
+}
+
 const API_BASE = '/api';
 
 async function req<T>(endpoint: string, options?: RequestInit): Promise<T> {
@@ -210,6 +307,13 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ pattern }),
     }),
+  duplicateKey: (source: string, target: string) =>
+    req<{ success: boolean }>('/keys/duplicate', {
+      method: 'POST',
+      body: JSON.stringify({ source, target }),
+    }),
+  getExportScriptUrl: (pattern = '*', limit = 1000) =>
+    `${API_BASE}/keys/export/script?pattern=${encodeURIComponent(pattern)}&limit=${limit}`,
   hset: (key: string, field: string, value: string) =>
     req<{ success: boolean }>('/keys/hash/set', {
       method: 'POST',
@@ -220,7 +324,7 @@ export const api = {
       method: 'DELETE',
     }),
 
-  // Memory Profiler
+  // Memory Profiler & Advisor
   getMemoryProfile: (limit = 5000, pattern = '*', delimiter = ':', top = 50) =>
     req<ProfileReport>(
       `/memory/profile?limit=${limit}&pattern=${encodeURIComponent(pattern)}&delimiter=${encodeURIComponent(delimiter)}&top=${top}`
@@ -246,6 +350,29 @@ export const api = {
     }),
   getCompletions: (q: string) =>
     req<CommandDef[]>(`/repl/autocomplete?q=${encodeURIComponent(q)}`),
+
+  // Clients Connection Manager
+  getClients: () => req<ClientInfo[]>('/clients'),
+  killClient: (target: string, by_id = false) =>
+    req<{ success: boolean }>('/clients/kill', {
+      method: 'POST',
+      body: JSON.stringify({ target, by_id }),
+    }),
+
+  // Traffic Sampler
+  sampleTraffic: (duration_sec = 5, max_commands = 500) =>
+    req<TrafficSummary>(`/traffic/sample?duration_sec=${duration_sec}&max_commands=${max_commands}`),
+
+  // Cluster Topology
+  getClusterTopology: () => req<TopologyReport>('/cluster/topology'),
+  lookupClusterSlot: (key: string) => req<SlotLookupResult>(`/cluster/slot?key=${encodeURIComponent(key)}`),
+
+  // Pub/Sub
+  publishPubSub: (channel: string, message: string) =>
+    req<{ success: boolean; receivers: number }>('/pubsub/publish', {
+      method: 'POST',
+      body: JSON.stringify({ channel, message }),
+    }),
 };
 
 // SSE Telemetry Subscription
@@ -274,6 +401,31 @@ export function subscribeTelemetry(
     try {
       const records: SlowlogRecord[] = JSON.parse(e.data);
       onSlowlog(records);
+    } catch {}
+  });
+
+  return () => {
+    evtSource.close();
+  };
+}
+
+// SSE Pub/Sub Subscription
+export function subscribePubSub(
+  channels: string[],
+  patterns: string[],
+  onMessage: (msg: PubSubMessage) => void
+): () => void {
+  const chParam = channels.length ? `channels=${encodeURIComponent(channels.join(','))}` : '';
+  const patParam = patterns.length ? `patterns=${encodeURIComponent(patterns.join(','))}` : '';
+  const query = [chParam, patParam].filter(Boolean).join('&');
+  const url = `${API_BASE}/pubsub/stream${query ? '?' + query : ''}`;
+
+  const evtSource = new EventSource(url);
+
+  evtSource.addEventListener('message', (e) => {
+    try {
+      const msg: PubSubMessage = JSON.parse(e.data);
+      onMessage(msg);
     } catch {}
   });
 

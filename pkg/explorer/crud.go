@@ -256,3 +256,69 @@ func ExpireSimulator(ttlMs int64) *time.Time {
 	t := time.Now().Add(time.Duration(ttlMs) * time.Millisecond)
 	return &t
 }
+
+// DuplicateKey clones an existing key to a new target name, preserving its type, payload, and TTL.
+func (c *CRUDManager) DuplicateKey(ctx context.Context, source, target string) error {
+	if source == "" || target == "" {
+		return fmt.Errorf("source and target key names are required")
+	}
+
+	detail, err := c.GetKeyDetail(ctx, source)
+	if err != nil {
+		return fmt.Errorf("cannot duplicate key '%s': %w", source, err)
+	}
+
+	switch detail.Type {
+	case "string":
+		if strVal, ok := detail.Value.(string); ok {
+			if err := c.SetString(ctx, target, strVal, 0); err != nil {
+				return err
+			}
+		}
+	case "hash":
+		if hVal, ok := detail.Value.(map[string]string); ok {
+			for f, v := range hVal {
+				if err := c.HSet(ctx, target, f, v); err != nil {
+					return err
+				}
+			}
+		}
+	case "list":
+		if lVal, ok := detail.Value.([]string); ok {
+			_ = c.DeleteKey(ctx, target)
+			if len(lVal) > 0 {
+				if err := c.RPush(ctx, target, lVal...); err != nil {
+					return err
+				}
+			}
+		}
+	case "set":
+		if sVal, ok := detail.Value.([]string); ok {
+			_ = c.DeleteKey(ctx, target)
+			if len(sVal) > 0 {
+				if err := c.SAdd(ctx, target, sVal...); err != nil {
+					return err
+				}
+			}
+		}
+	case "zset":
+		if zVal, ok := detail.Value.([]ZSetItem); ok {
+			_ = c.DeleteKey(ctx, target)
+			for _, m := range zVal {
+				if err := c.ZAdd(ctx, target, m.Score, m.Member); err != nil {
+					return err
+				}
+			}
+		}
+	default:
+		return fmt.Errorf("unsupported type '%s' for key duplication", detail.Type)
+	}
+
+	// Preserve TTL if positive
+	if detail.TTLMs > 0 {
+		_, _ = c.client.Do(ctx, "PEXPIRE", target, strconv.FormatInt(detail.TTLMs, 10))
+	}
+
+	return nil
+}
+

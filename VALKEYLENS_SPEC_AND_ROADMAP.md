@@ -305,8 +305,38 @@ valkey-lens/
 2. Single-binary embedding:
    * Configure `Makefile`: `npm --prefix ui run build && go build -o bin/valkeylens`.
    * Embed `ui/dist` via `//go:embed dist/*` in `server/static.go`.
-3. Produce multi-platform binaries:
-   * Windows (`valkeylens.exe`), macOS (`arm64` / `amd64`), Linux (`amd64` / `arm64`).
+### Phase 7: ValkeyLens 2.0 Strategic Feature Pack (Completed - 100%)
+1. **Client Connection Manager (`pkg/clients`, `ui/src/components/Clients`):**
+   * Real-time client inspection parsing `CLIENT LIST`.
+   * Input/output buffer memory bloat flags (`omem`, `qbuf`).
+   * Targeted `CLIENT KILL` with safety dialog confirmation.
+2. **Safe Throttled Traffic Sampler (`pkg/traffic`, `ui/src/components/Traffic`):**
+   * Live streaming bounded `MONITOR` session with guaranteed auto-kill timeouts and count thresholds.
+   * Real-time command categorization (`READ`, `WRITE`, `SCAN`, `ADMIN`).
+   * Live Hot Keys identification and frequency rankings.
+3. **Latency & Slowlog Event Spike Analyzer (`pkg/telemetry`):**
+   * Continuous slowlog parsing with live SSE alerts and execution time metrics.
+4. **Global Command Palette (`ui/src/components/CommandPalette`):**
+   * `Ctrl+K` / `Cmd+K` global keyboard shortcut.
+   * Instant search and view navigation across all 9 studio views.
+   * Quick action triggers for key creation, memory profiling, traffic sampling, and REPL.
+5. **Interactive JSON Tree Viewer (`ui/src/components/KeyDetail/JsonTreeView.tsx`):**
+   * Collapsible recursive tree view for structured JSON documents.
+   * Real-time JSONPath and keyword filtering.
+   * Inline type badges and one-click sub-tree copying.
+6. **Pub/Sub Live Sniffer & Message Publisher (`pkg/pubsub`, `ui/src/components/PubSub`):**
+   * Real-time SSE stream of published messages matching channel patterns.
+   * Modal dialog to dispatch and publish messages with JSON/raw payloads.
+7. **Automated Memory Optimization Advisor (`pkg/profiler/advisor.go`):**
+   * Heuristic analysis of RAM usage patterns.
+   * Detection of uncompressed strings, missing TTLs, and idle cache bloat.
+   * One-click copyable CLI remediation commands.
+8. **Cluster Topology & 16,384 Hash Slot Visualizer (`pkg/cluster`, `ui/src/components/Cluster`):**
+   * Visual slot distribution bar across master and replica shards.
+   * Interactive CRC16 `{hash_tag}` slot calculator.
+9. **Key Duplication & `.redis` CLI Script Exporter (`pkg/explorer`, `ui/src/components/KeyDetail`):**
+   * Direct key cloning with preserved data and TTLs (`POST /api/keys/duplicate`).
+   * Mass export of keyspaces into pipeline-ready `.redis` CLI scripts (`GET /api/keys/export/script`).
 
 ---
 

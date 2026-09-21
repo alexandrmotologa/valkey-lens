@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Copy, Check, Save, Code, FileText } from 'lucide-react';
+import { Copy, Check, Save, Code, FileText, Network } from 'lucide-react';
 import { api, KeyDetail } from '../../api/client';
+import { JsonTreeView } from './JsonTreeView';
 
 interface StringViewProps {
   detail: KeyDetail;
@@ -10,21 +11,31 @@ interface StringViewProps {
 
 export const StringView: React.FC<StringViewProps> = ({ detail, readOnly, onRefresh }) => {
   const [content, setContent] = useState<string>('');
-  const [isJSONView, setIsJSONView] = useState<boolean>(detail.is_json);
+  const [parsedJson, setParsedJson] = useState<any>(null);
+  const [viewMode, setViewMode] = useState<'tree' | 'json' | 'raw'>('raw');
   const [copied, setCopied] = useState<boolean>(false);
   const [saving, setSaving] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let strVal = typeof detail.value === 'string' ? detail.value : JSON.stringify(detail.value, null, 2);
-    if (detail.is_json) {
-      try {
-        const parsed = JSON.parse(strVal);
-        strVal = JSON.stringify(parsed, null, 2);
-      } catch {}
-    }
+    let parsed = null;
+    let isJson = false;
+
+    try {
+      parsed = JSON.parse(strVal);
+      if (typeof parsed === 'object' && parsed !== null) {
+        isJson = true;
+        setParsedJson(parsed);
+      }
+    } catch {}
+
     setContent(strVal);
-    setIsJSONView(detail.is_json);
+    if (isJson || detail.is_json) {
+      setViewMode('tree');
+    } else {
+      setViewMode('raw');
+    }
   }, [detail]);
 
   const handleCopy = () => {
@@ -52,25 +63,34 @@ export const StringView: React.FC<StringViewProps> = ({ detail, readOnly, onRefr
       {/* Action Toolbar */}
       <div className="h-10 px-4 border-b border-[#1e293b] bg-[#101625] flex items-center justify-between">
         <div className="flex items-center gap-2">
-          {detail.is_json && (
+          {(detail.is_json || parsedJson) && (
             <div className="flex items-center bg-[#161e31] p-0.5 rounded-md border border-[#1e293b] text-xs">
               <button
-                onClick={() => setIsJSONView(true)}
+                onClick={() => setViewMode('tree')}
                 className={`flex items-center gap-1 px-2 py-1 rounded transition-colors ${
-                  isJSONView ? 'bg-[#00f5ff]/20 text-[#00f5ff] font-medium' : 'text-slate-400 hover:text-white'
+                  viewMode === 'tree' ? 'bg-[#00f5ff]/20 text-[#00f5ff] font-medium' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Network className="w-3.5 h-3.5" />
+                Interactive Tree
+              </button>
+              <button
+                onClick={() => setViewMode('json')}
+                className={`flex items-center gap-1 px-2 py-1 rounded transition-colors ${
+                  viewMode === 'json' ? 'bg-[#00f5ff]/20 text-[#00f5ff] font-medium' : 'text-slate-400 hover:text-white'
                 }`}
               >
                 <Code className="w-3.5 h-3.5" />
                 JSON
               </button>
               <button
-                onClick={() => setIsJSONView(false)}
+                onClick={() => setViewMode('raw')}
                 className={`flex items-center gap-1 px-2 py-1 rounded transition-colors ${
-                  !isJSONView ? 'bg-[#00f5ff]/20 text-[#00f5ff] font-medium' : 'text-slate-400 hover:text-white'
+                  viewMode === 'raw' ? 'bg-[#00f5ff]/20 text-[#00f5ff] font-medium' : 'text-slate-400 hover:text-white'
                 }`}
               >
                 <FileText className="w-3.5 h-3.5" />
-                Raw Text
+                Raw
               </button>
             </div>
           )}
@@ -88,7 +108,7 @@ export const StringView: React.FC<StringViewProps> = ({ detail, readOnly, onRefr
             {copied ? 'Copied' : 'Copy'}
           </button>
 
-          {!readOnly && (
+          {!readOnly && viewMode !== 'tree' && (
             <button
               onClick={handleSave}
               disabled={saving}
@@ -107,16 +127,22 @@ export const StringView: React.FC<StringViewProps> = ({ detail, readOnly, onRefr
         </div>
       )}
 
-      {/* Editor view */}
-      <div className="flex-1 p-3 overflow-auto">
-        <textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          readOnly={readOnly}
-          className="w-full h-full bg-transparent text-slate-200 font-mono text-xs leading-relaxed resize-none focus:outline-none selection:bg-[#00f5ff]/20"
-          placeholder="Key value..."
-          spellCheck={false}
-        />
+      {/* Editor or Tree View */}
+      <div className="flex-1 overflow-hidden">
+        {viewMode === 'tree' && parsedJson ? (
+          <JsonTreeView data={parsedJson} readOnly={readOnly} />
+        ) : (
+          <div className="p-3 h-full overflow-auto">
+            <textarea
+              value={viewMode === 'json' && parsedJson ? JSON.stringify(parsedJson, null, 2) : content}
+              onChange={(e) => setContent(e.target.value)}
+              readOnly={readOnly}
+              className="w-full h-full bg-transparent text-slate-200 font-mono text-xs leading-relaxed resize-none focus:outline-none selection:bg-[#00f5ff]/20"
+              placeholder="Key value..."
+              spellCheck={false}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

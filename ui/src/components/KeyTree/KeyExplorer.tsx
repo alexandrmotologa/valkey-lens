@@ -9,7 +9,8 @@ import {
   Trash2, 
   ChevronRight, 
   ChevronDown,
-  X
+  X,
+  Download
 } from 'lucide-react';
 import { api, KeySummary, KeyDetail, formatBytes } from '../../api/client';
 import { KeyDetailView } from '../KeyDetail/KeyDetailView';
@@ -183,6 +184,14 @@ export const KeyExplorer: React.FC<KeyExplorerProps> = ({ readOnly }) => {
               title="Refresh Keys"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            </button>
+
+            <button
+              onClick={() => window.open(api.getExportScriptUrl(pattern, 1000), '_blank')}
+              className="p-1.5 bg-[#161e31] hover:bg-[#1e293b] text-emerald-400 rounded-lg border border-[#1e293b] transition-colors"
+              title="Export Dataset to .redis Script"
+            >
+              <Download className="w-3.5 h-3.5" />
             </button>
 
             {!readOnly && (

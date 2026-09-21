@@ -385,6 +385,111 @@ func (m *MockClient) Do(ctx context.Context, args ...string) (interface{}, error
 			return int64(0), nil
 		}
 		key.TTL = 0
+	case "PEXPIRE":
+		if len(args) < 3 {
+			return int64(0), nil
+		}
+		key, ok := m.keys[args[1]]
+		if !ok || m.isExpired(key) {
+			return int64(0), nil
+		}
+		var ms int64
+		fmt.Sscanf(args[2], "%d", &ms)
+		key.TTL = time.Duration(ms) * time.Millisecond
+		key.CreatedAt = time.Now()
+		return int64(1), nil
+
+	case "HSET":
+		if len(args) < 4 {
+			return int64(0), nil
+		}
+		keyName := args[1]
+		key, ok := m.keys[keyName]
+		if !ok || key.Type != "hash" {
+			key = &MockKey{
+				Type:        "hash",
+				Value:       make(map[string]string),
+				CreatedAt:   time.Now(),
+				MemoryBytes: 64,
+			}
+			m.keys[keyName] = key
+		}
+		h := key.Value.(map[string]string)
+		for i := 2; i < len(args)-1; i += 2 {
+			h[args[i]] = args[i+1]
+			key.MemoryBytes += int64(len(args[i]) + len(args[i+1]) + 16)
+		}
+		return int64(1), nil
+
+	case "RPUSH", "LPUSH":
+		if len(args) < 3 {
+			return int64(0), nil
+		}
+		keyName := args[1]
+		key, ok := m.keys[keyName]
+		if !ok || key.Type != "list" {
+			key = &MockKey{
+				Type:        "list",
+				Value:       make([]string, 0),
+				CreatedAt:   time.Now(),
+				MemoryBytes: 64,
+			}
+			m.keys[keyName] = key
+		}
+		l := key.Value.([]string)
+		if cmd == "RPUSH" {
+			l = append(l, args[2:]...)
+		} else {
+			l = append(args[2:], l...)
+		}
+		key.Value = l
+		return int64(len(l)), nil
+
+	case "SADD":
+		if len(args) < 3 {
+			return int64(0), nil
+		}
+		keyName := args[1]
+		key, ok := m.keys[keyName]
+		if !ok || key.Type != "set" {
+			key = &MockKey{
+				Type:        "set",
+				Value:       make(map[string]struct{}),
+				CreatedAt:   time.Now(),
+				MemoryBytes: 64,
+			}
+			m.keys[keyName] = key
+		}
+		s := key.Value.(map[string]struct{})
+		var added int64
+		for _, item := range args[2:] {
+			if _, exists := s[item]; !exists {
+				s[item] = struct{}{}
+				added++
+			}
+		}
+		return added, nil
+
+	case "ZADD":
+		if len(args) < 4 {
+			return int64(0), nil
+		}
+		keyName := args[1]
+		key, ok := m.keys[keyName]
+		if !ok || key.Type != "zset" {
+			key = &MockKey{
+				Type:        "zset",
+				Value:       make([]MockZMember, 0),
+				CreatedAt:   time.Now(),
+				MemoryBytes: 64,
+			}
+			m.keys[keyName] = key
+		}
+		z := key.Value.([]MockZMember)
+		var score float64
+		fmt.Sscanf(args[2], "%f", &score)
+		z = append(z, MockZMember{Member: args[3], Score: score})
+		key.Value = z
 		return int64(1), nil
 
 	case "DBSIZE":
@@ -427,6 +532,28 @@ func (m *MockClient) Do(ctx context.Context, args ...string) (interface{}, error
 		}
 		list := key.Value.([]string)
 		return list, nil
+
+	case "CLIENT":
+		if len(args) > 1 && strings.ToUpper(args[1]) == "LIST" {
+			return `id=11 addr=127.0.0.1:49152 fd=7 name=valkeylens-studio age=120 idle=0 flags=N db=0 cmd=client omem=0 tot-mem=20480 user=default
+id=12 addr=10.0.4.12:51920 fd=8 name=api-gateway age=7200 idle=3 flags=N db=0 cmd=hgetall omem=512 tot-mem=16384 user=default
+id=13 addr=10.0.4.19:38192 fd=9 name=order-worker age=18000 idle=1 flags=N db=0 cmd=rpush omem=0 tot-mem=32768 user=default
+id=14 addr=10.0.5.88:41028 fd=10 name=analytics-streamer age=36000 idle=25 flags=N db=0 cmd=xadd omem=2048 tot-mem=65536 user=default
+id=15 addr=10.0.2.101:59124 fd=11 name=stale-crawler age=86400 idle=4200 flags=N db=0 cmd=scan omem=81920 tot-mem=131072 user=default`, nil
+		}
+		if len(args) > 1 && strings.ToUpper(args[1]) == "KILL" {
+			return "OK", nil
+		}
+		return "OK", nil
+
+	case "CLUSTER":
+		if len(args) > 1 && strings.ToUpper(args[1]) == "NODES" {
+			return m.ClusterNodes(ctx)
+		}
+		return "OK", nil
+
+	case "PUBLISH":
+		return int64(3), nil
 
 	case "SMEMBERS":
 		if len(args) < 2 {
@@ -656,6 +783,101 @@ func (m *MockClient) GetStreamGroups(streamKey string) map[string]*MockConsumerG
 	defer m.mu.RUnlock()
 
 	return m.streamGroups[streamKey]
+}
+
+func (m *MockClient) StreamTraffic(ctx context.Context, maxCount int, out chan<- TrafficEvent) error {
+	sampleCommands := []struct {
+		cmd string
+		key string
+	}{
+		{"GET", "user:profile:1001"},
+		{"HGETALL", "catalog:product:VLK-SRV-800"},
+		{"SET", "user:session:tok_882194"},
+		{"HGET", "settings:user:1001"},
+		{"LPUSH", "queue:background_workers"},
+		{"GET", "user:profile:1002"},
+		{"XADD", "stream:orders:events"},
+		{"ZREVRANGE", "leaderboard:global_rankings"},
+		{"GET", "system:status:health"},
+		{"SCAN", ""},
+		{"INFO", ""},
+	}
+
+	ticker := time.NewTicker(25 * time.Millisecond)
+	defer ticker.Stop()
+
+	count := 0
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-ticker.C:
+			sample := sampleCommands[rand.Intn(len(sampleCommands))]
+			event := TrafficEvent{
+				Timestamp: time.Now(),
+				DB:        0,
+				ClientIP:  fmt.Sprintf("10.0.%d.%d:%d", rand.Intn(5)+1, rand.Intn(200)+1, rand.Intn(40000)+10000),
+				Command:   sample.cmd,
+				Key:       sample.key,
+			}
+			select {
+			case out <- event:
+				count++
+				if count >= maxCount {
+					return nil
+				}
+			case <-ctx.Done():
+				return ctx.Err()
+			}
+		}
+	}
+}
+
+func (m *MockClient) Subscribe(ctx context.Context, channels []string, patterns []string, out chan<- PubSubMessage) error {
+	ticker := time.NewTicker(1500 * time.Millisecond)
+	defer ticker.Stop()
+
+	events := []struct {
+		ch      string
+		payload string
+	}{
+		{"events:orders", `{"order_id":"ord_9901","status":"paid","amount":149.99}`},
+		{"notifications:alerts", `{"level":"info","msg":"Worker pool auto-scaled to 8 instances"}`},
+		{"telemetry:heartbeat", `{"node":"valkey-node-01","status":"healthy","load":0.18}`},
+		{"cache:invalidation", `{"key":"catalog:product:RED-MIG-100","reason":"price_update"}`},
+	}
+
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-ticker.C:
+			ev := events[rand.Intn(len(events))]
+			msg := PubSubMessage{
+				Channel:   ev.ch,
+				Payload:   ev.payload,
+				Timestamp: time.Now(),
+			}
+			select {
+			case out <- msg:
+			case <-ctx.Done():
+				return ctx.Err()
+			}
+		}
+	}
+}
+
+func (m *MockClient) Publish(ctx context.Context, channel string, message string) (int64, error) {
+	return 3, nil
+}
+
+func (m *MockClient) ClusterNodes(ctx context.Context) (string, error) {
+	return `07c37dfeb235213a8602b4d7330894c4922b7e5c 127.0.0.1:7000@17000 myself,master - 0 0 1 connected 0-5460
+6750d1c0580d0e1e5d7cbf71302688d4869ac755 127.0.0.1:7001@17001 master - 0 0 2 connected 5461-10922
+9f46521c000acab326f3e194e82912c930193914 127.0.0.1:7002@17002 master - 0 0 3 connected 10923-16383
+a11824c0580d0e1e5d7cbf71302688d4869ac755 127.0.0.1:7003@17003 slave 07c37dfeb235213a8602b4d7330894c4922b7e5c 0 0 4 connected
+b22934c0580d0e1e5d7cbf71302688d4869ac755 127.0.0.1:7004@17004 slave 6750d1c0580d0e1e5d7cbf71302688d4869ac755 0 0 5 connected
+c33044c0580d0e1e5d7cbf71302688d4869ac755 127.0.0.1:7005@17005 slave 9f46521c000acab326f3e194e82912c930193914 0 0 6 connected`, nil
 }
 
 func matchPattern(s, pattern string) bool {

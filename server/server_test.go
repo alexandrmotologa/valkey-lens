@@ -6,25 +6,35 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/alexandrmotologa/valkey-lens/pkg/client"
+	"github.com/alexandrmotologa/valkey-lens/pkg/clients"
+	"github.com/alexandrmotologa/valkey-lens/pkg/cluster"
 	"github.com/alexandrmotologa/valkey-lens/pkg/explorer"
 	"github.com/alexandrmotologa/valkey-lens/pkg/profiler"
+	"github.com/alexandrmotologa/valkey-lens/pkg/pubsub"
 	"github.com/alexandrmotologa/valkey-lens/pkg/repl"
 	"github.com/alexandrmotologa/valkey-lens/pkg/streams"
 	"github.com/alexandrmotologa/valkey-lens/pkg/telemetry"
+	"github.com/alexandrmotologa/valkey-lens/pkg/traffic"
 )
 
 func setupTestServer(readOnly bool) http.Handler {
 	cli := client.NewMockClient(readOnly)
 	scanner := explorer.NewScanner(cli)
 	crud := explorer.NewCRUDManager(cli)
+	exporter := explorer.NewScriptExporter(cli, scanner, crud)
 	prof := profiler.NewProfiler(cli)
 	inspector := streams.NewInspector(cli)
 	monitor := telemetry.NewMonitor(cli)
 	slowlog := telemetry.NewSlowlogTracker(cli)
 	eval := repl.NewEvaluator(cli)
+	clientsMgr := clients.NewManager(cli)
+	sampler := traffic.NewSampler(cli)
+	broker := pubsub.NewBroker(cli)
+	clusterRes := cluster.NewResolver(cli)
 
 	monitor.Start(context.Background())
 
@@ -32,11 +42,16 @@ func setupTestServer(readOnly bool) http.Handler {
 		Client:    cli,
 		Scanner:   scanner,
 		CRUD:      crud,
+		Exporter:  exporter,
 		Profiler:  prof,
 		Inspector: inspector,
 		Monitor:   monitor,
 		Slowlog:   slowlog,
 		Evaluator: eval,
+		Clients:   clientsMgr,
+		Sampler:   sampler,
+		Broker:    broker,
+		Cluster:   clusterRes,
 		AssetFS:   nil,
 		Version:   "0.1.0-test",
 		Options: client.Options{
@@ -111,6 +126,67 @@ func TestServerEndpoints(t *testing.T) {
 	_ = json.NewDecoder(w.Body).Decode(&replRes)
 	if replRes.Formatted != "\"PONG\"" {
 		t.Errorf("Expected PONG from REPL, got %s", replRes.Formatted)
+	}
+
+	// 6. Test GET /api/clients
+	req = httptest.NewRequest("GET", "/api/clients", nil)
+	w = httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("GET /api/clients failed with code %d", w.Code)
+	}
+	var clientList []clients.ClientInfo
+	_ = json.NewDecoder(w.Body).Decode(&clientList)
+	if len(clientList) == 0 {
+		t.Errorf("Expected clients in mock mode, got 0")
+	}
+
+	// 7. Test GET /api/cluster/topology
+	req = httptest.NewRequest("GET", "/api/cluster/topology", nil)
+	w = httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("GET /api/cluster/topology failed with code %d", w.Code)
+	}
+	var topo cluster.TopologyReport
+	_ = json.NewDecoder(w.Body).Decode(&topo)
+	if len(topo.Nodes) == 0 {
+		t.Errorf("Expected cluster nodes in mock topology")
+	}
+
+	// 8. Test GET /api/cluster/slot?key=user:{1001}:meta
+	req = httptest.NewRequest("GET", "/api/cluster/slot?key=user:{1001}:meta", nil)
+	w = httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("GET /api/cluster/slot failed with code %d", w.Code)
+	}
+	var slotRes cluster.SlotLookupResult
+	_ = json.NewDecoder(w.Body).Decode(&slotRes)
+	if slotRes.HashTag != "1001" {
+		t.Errorf("Expected hash_tag 1001, got %s", slotRes.HashTag)
+	}
+
+	// 9. Test POST /api/keys/duplicate
+	dupPayload := []byte(`{"source":"user:profile:1001","target":"user:profile:clone"}`)
+	req = httptest.NewRequest("POST", "/api/keys/duplicate", bytes.NewBuffer(dupPayload))
+	req.Header.Set("Content-Type", "application/json")
+	w = httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("POST /api/keys/duplicate failed with code %d", w.Code)
+	}
+
+	// 10. Test GET /api/keys/export/script
+	req = httptest.NewRequest("GET", "/api/keys/export/script?pattern=user:*", nil)
+	w = httptest.NewRecorder()
+	handler.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("GET /api/keys/export/script failed with code %d", w.Code)
+	}
+	bodyStr := w.Body.String()
+	if !strings.Contains(bodyStr, "# ValkeyLens Dataset Dump") {
+		t.Errorf("Exported script missing header comment")
 	}
 }
 

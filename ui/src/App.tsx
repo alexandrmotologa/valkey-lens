@@ -9,6 +9,11 @@ import { StreamInspector } from './components/Streams/StreamInspector';
 import { TelemetryDashboard } from './components/Telemetry/TelemetryDashboard';
 import { WebTerminal } from './components/REPL/WebTerminal';
 import { ProfileManager } from './components/Profiles/ProfileManager';
+import { CommandPalette } from './components/CommandPalette/CommandPalette';
+import { ClientManager } from './components/Clients/ClientManager';
+import { TrafficSampler } from './components/Traffic/TrafficSampler';
+import { PubSubConsole } from './components/PubSub/PubSubConsole';
+import { ClusterMap } from './components/Cluster/ClusterMap';
 import { 
   api, 
   SystemInfo, 
@@ -18,12 +23,13 @@ import {
   ConnectionProfile,
   formatBytes
 } from './api/client';
-import { Database, HardDrive, Cpu, Radio, ExternalLink, GitBranch } from 'lucide-react';
+import { Database, HardDrive, Cpu, Radio, Sparkles } from 'lucide-react';
 
 export const App: React.FC = () => {
   const [currentTab, setCurrentTab] = useState<TabType>('explorer');
   const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
   const [isProfilesOpen, setIsProfilesOpen] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [latestMetric, setLatestMetric] = useState<MetricPoint | null>(null);
   const [serverMeta, setServerMeta] = useState<TelemetrySnapshot['server'] | null>(null);
@@ -33,6 +39,19 @@ export const App: React.FC = () => {
     api.getSystemInfo()
       .then(setSystemInfo)
       .catch((err) => console.error('Failed to load system info:', err));
+  }, []);
+
+  // Global Ctrl+K / Cmd+K listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsCommandPaletteOpen((prev) => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   // Subscribe to telemetry SSE stream
@@ -62,7 +81,6 @@ export const App: React.FC = () => {
 
   const handleSelectProfile = (_profile: ConnectionProfile) => {
     setIsProfilesOpen(false);
-    // Reload system info
     api.getSystemInfo().then(setSystemInfo).catch(console.error);
   };
 
@@ -74,6 +92,7 @@ export const App: React.FC = () => {
         onTabChange={setCurrentTab}
         systemInfo={systemInfo}
         onOpenProfiles={() => setIsProfilesOpen(true)}
+        onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
         isStreaming={isStreaming}
       />
 
@@ -84,6 +103,18 @@ export const App: React.FC = () => {
         )}
         {currentTab === 'profiler' && (
           <MemoryProfiler onSelectKey={handleSelectKeyFromProfiler} />
+        )}
+        {currentTab === 'traffic' && (
+          <TrafficSampler />
+        )}
+        {currentTab === 'clients' && (
+          <ClientManager />
+        )}
+        {currentTab === 'pubsub' && (
+          <PubSubConsole />
+        )}
+        {currentTab === 'cluster' && (
+          <ClusterMap />
         )}
         {currentTab === 'streams' && (
           <StreamInspector />
@@ -137,6 +168,14 @@ export const App: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-4">
+          <button
+            onClick={() => setIsCommandPaletteOpen(true)}
+            className="flex items-center gap-1 text-[10px] text-cyan-400 hover:text-cyan-300 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/30 transition-colors"
+          >
+            <Sparkles className="w-3 h-3" />
+            <span>Cmd Palette (Ctrl+K)</span>
+          </button>
+
           {systemInfo?.is_demo && (
             <span className="text-[#00f5ff] bg-[#00f5ff]/10 px-2 py-0.5 rounded border border-[#00f5ff]/30 text-[10px]">
               Non-Blocking Mock Engine
@@ -163,6 +202,13 @@ export const App: React.FC = () => {
         onClose={() => setIsProfilesOpen(false)}
         activeProfileId={systemInfo?.is_demo ? 'demo' : 'default'}
         onSelectProfile={handleSelectProfile}
+      />
+
+      {/* Global Command Palette */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        onNavigate={(tab) => setCurrentTab(tab)}
       />
     </div>
   );

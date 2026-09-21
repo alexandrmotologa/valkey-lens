@@ -16,8 +16,9 @@ type ProfileReport struct {
 	TotalBytes    int64            `json:"total_bytes"`
 	Root          *NamespaceNode   `json:"root"`
 	Namespaces    []*NamespaceNode `json:"namespaces"`
-	BigKeys       []BigKeyEntry    `json:"big_keys"`
-	LeakAlerts    []string         `json:"leak_alerts,omitempty"`
+	BigKeys       []BigKeyEntry        `json:"big_keys"`
+	LeakAlerts    []string             `json:"leak_alerts,omitempty"`
+	Insights      []OptimizationInsight `json:"insights,omitempty"`
 }
 
 // Profiler orchestrates memory profiling scans.
@@ -101,7 +102,7 @@ func (p *Profiler) RunProfile(ctx context.Context, sampleLimit int, pattern, del
 		}
 	}
 
-	return &ProfileReport{
+	rep := &ProfileReport{
 		Timestamp:   time.Now(),
 		ScannedKeys: scannedCount,
 		TotalBytes:  tree.Root.TotalBytes,
@@ -109,5 +110,7 @@ func (p *Profiler) RunProfile(ctx context.Context, sampleLimit int, pattern, del
 		Namespaces:  tree.FlattenTopNamespaces(),
 		BigKeys:     bigKeys.Entries(),
 		LeakAlerts:  leakAlerts,
-	}, nil
+	}
+	rep.Insights = GenerateInsights(rep)
+	return rep, nil
 }

@@ -22,6 +22,23 @@ type SlowlogRecord struct {
 	ClientName string       `json:"client_name,omitempty"`
 }
 
+// TrafficEvent represents a command intercepted during traffic monitoring.
+type TrafficEvent struct {
+	Timestamp time.Time
+	DB        int
+	ClientIP  string
+	Command   string
+	Key       string
+}
+
+// PubSubMessage represents an event received on a subscribed channel or pattern.
+type PubSubMessage struct {
+	Channel   string    `json:"channel"`
+	Pattern   string    `json:"pattern,omitempty"`
+	Payload   string    `json:"payload"`
+	Timestamp time.Time `json:"timestamp"`
+}
+
 // Client defines the common database operations required by ValkeyLens.
 type Client interface {
 	// Ping tests server connectivity.
@@ -47,6 +64,18 @@ type Client interface {
 
 	// SlowlogGet retrieves the recent slowlog entries.
 	SlowlogGet(ctx context.Context, count int64) ([]SlowlogRecord, error)
+
+	// StreamTraffic samples live command traffic up to maxCount or context expiration.
+	StreamTraffic(ctx context.Context, maxCount int, out chan<- TrafficEvent) error
+
+	// Subscribe listens on channels and patterns and forwards messages to out.
+	Subscribe(ctx context.Context, channels []string, patterns []string, out chan<- PubSubMessage) error
+
+	// Publish broadcasts a message to a channel.
+	Publish(ctx context.Context, channel string, message string) (int64, error)
+
+	// ClusterNodes returns raw output from CLUSTER NODES.
+	ClusterNodes(ctx context.Context) (string, error)
 
 	// Close terminates the client connection pool.
 	Close()

@@ -9,28 +9,37 @@ import (
 	"github.com/go-chi/cors"
 
 	"github.com/alexandrmotologa/valkey-lens/pkg/client"
+	"github.com/alexandrmotologa/valkey-lens/pkg/clients"
+	"github.com/alexandrmotologa/valkey-lens/pkg/cluster"
 	"github.com/alexandrmotologa/valkey-lens/pkg/explorer"
 	"github.com/alexandrmotologa/valkey-lens/pkg/profiler"
+	"github.com/alexandrmotologa/valkey-lens/pkg/pubsub"
 	"github.com/alexandrmotologa/valkey-lens/pkg/repl"
 	"github.com/alexandrmotologa/valkey-lens/pkg/streams"
 	"github.com/alexandrmotologa/valkey-lens/pkg/telemetry"
+	"github.com/alexandrmotologa/valkey-lens/pkg/traffic"
 	"github.com/alexandrmotologa/valkey-lens/server/handlers"
 	"github.com/alexandrmotologa/valkey-lens/server/middleware"
 )
 
 // RouterConfig contains services required by the HTTP server.
 type RouterConfig struct {
-	Client     client.Client
-	Scanner    *explorer.Scanner
-	CRUD       *explorer.CRUDManager
-	Profiler   *profiler.Profiler
-	Inspector  *streams.Inspector
-	Monitor    *telemetry.Monitor
-	Slowlog    *telemetry.SlowlogTracker
-	Evaluator  *repl.Evaluator
-	AssetFS    fs.FS
-	Version    string
-	Options    client.Options
+	Client    client.Client
+	Scanner   *explorer.Scanner
+	CRUD      *explorer.CRUDManager
+	Exporter  *explorer.ScriptExporter
+	Profiler  *profiler.Profiler
+	Inspector *streams.Inspector
+	Monitor   *telemetry.Monitor
+	Slowlog   *telemetry.SlowlogTracker
+	Evaluator *repl.Evaluator
+	Clients   *clients.Manager
+	Sampler   *traffic.Sampler
+	Broker    *pubsub.Broker
+	Cluster   *cluster.Resolver
+	AssetFS   fs.FS
+	Version   string
+	Options   client.Options
 }
 
 // NewRouter constructs and configures the Chi HTTP router.
@@ -58,12 +67,16 @@ func NewRouter(cfg RouterConfig) http.Handler {
 	r.Use(middleware.ReadOnlyGuard(cfg.Client.IsReadOnly()))
 
 	// Instantiate handlers
-	keysH := handlers.NewKeysHandler(cfg.Scanner, cfg.CRUD)
+	keysH := handlers.NewKeysHandler(cfg.Scanner, cfg.CRUD, cfg.Exporter)
 	memoryH := handlers.NewMemoryHandler(cfg.Profiler)
 	streamsH := handlers.NewStreamsHandler(cfg.Inspector)
 	telemetryH := handlers.NewTelemetryHandler(cfg.Monitor, cfg.Slowlog)
 	replH := handlers.NewREPLHandler(cfg.Evaluator)
 	systemH := handlers.NewSystemHandler(cfg.Client, cfg.Version, cfg.Options)
+	clientsH := handlers.NewClientsHandler(cfg.Clients)
+	trafficH := handlers.NewTrafficHandler(cfg.Sampler)
+	pubsubH := handlers.NewPubSubHandler(cfg.Broker)
+	clusterH := handlers.NewClusterHandler(cfg.Cluster)
 
 	// API Routes
 	r.Route("/api", func(api chi.Router) {
@@ -81,6 +94,23 @@ func NewRouter(cfg RouterConfig) http.Handler {
 		api.Post("/keys/delete-pattern", keysH.DeletePattern)
 		api.Post("/keys/hash/set", keysH.HSet)
 		api.Delete("/keys/hash/field", keysH.HDel)
+		api.Post("/keys/duplicate", keysH.Duplicate)
+		api.Get("/keys/export/script", keysH.ExportScript)
+
+		// Clients Connection Manager
+		api.Get("/clients", clientsH.List)
+		api.Post("/clients/kill", clientsH.Kill)
+
+		// Traffic Sampler
+		api.Get("/traffic/sample", trafficH.Sample)
+
+		// Pub/Sub
+		api.Get("/pubsub/stream", pubsubH.Stream)
+		api.Post("/pubsub/publish", pubsubH.Publish)
+
+		// Cluster
+		api.Get("/cluster/topology", clusterH.Topology)
+		api.Get("/cluster/slot", clusterH.SlotLookup)
 
 		// Memory Profiler
 		api.Get("/memory/profile", memoryH.Profile)

@@ -109,3 +109,30 @@ func (s *Scanner) DeleteByPattern(ctx context.Context, pattern string, maxBatch 
 
 	return totalDeleted, nil
 }
+
+// ScanAllKeys scans keys matching pattern up to maxCount.
+func (s *Scanner) ScanAllKeys(ctx context.Context, pattern string, maxCount int) ([]KeySummary, error) {
+	if maxCount <= 0 {
+		maxCount = 1000
+	}
+	var all []KeySummary
+	var cursor uint64 = 0
+
+	for {
+		resp, err := s.ScanKeys(ctx, cursor, pattern, 250)
+		if err != nil {
+			return nil, err
+		}
+		all = append(all, resp.Keys...)
+		if len(all) >= maxCount || resp.Cursor == 0 {
+			break
+		}
+		cursor = resp.Cursor
+	}
+
+	if len(all) > maxCount {
+		all = all[:maxCount]
+	}
+	return all, nil
+}
+

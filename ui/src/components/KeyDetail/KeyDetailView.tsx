@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Clock, Trash2, Database, ShieldAlert } from 'lucide-react';
+import { Clock, Trash2, Database, ShieldAlert, CopyPlus, X, Check } from 'lucide-react';
 import { KeyDetail, api, formatBytes } from '../../api/client';
 import { StringView } from './StringView';
 import { HashView } from './HashView';
@@ -25,6 +25,12 @@ export const KeyDetailView: React.FC<KeyDetailViewProps> = ({
 }) => {
   const [editingTTL, setEditingTTL] = useState(false);
   const [ttlInput, setTtlInput] = useState('');
+
+  // Duplicate key modal
+  const [isDuplicating, setIsDuplicating] = useState(false);
+  const [targetKey, setTargetKey] = useState('');
+  const [dupLoading, setDupLoading] = useState(false);
+  const [dupError, setDupError] = useState<string | null>(null);
 
   if (loading) {
     return (
@@ -67,6 +73,22 @@ export const KeyDetailView: React.FC<KeyDetailViewProps> = ({
     }
   };
 
+  const handleDuplicate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!targetKey.trim()) return;
+    setDupLoading(true);
+    setDupError(null);
+    try {
+      await api.duplicateKey(detail.name, targetKey.trim());
+      setIsDuplicating(false);
+      onRefresh();
+    } catch (err: any) {
+      setDupError(err.message || 'Failed to clone key');
+    } finally {
+      setDupLoading(false);
+    }
+  };
+
   const getTypeBadgeClass = (t: string) => {
     switch (t.toLowerCase()) {
       case 'string':
@@ -103,7 +125,7 @@ export const KeyDetailView: React.FC<KeyDetailViewProps> = ({
           </h2>
         </div>
 
-        {/* Badges: Memory & TTL */}
+        {/* Badges: Memory & TTL & Actions */}
         <div className="flex items-center gap-3">
           {/* Memory Usage */}
           <div className="text-xs bg-[#161e31] px-3 py-1.5 rounded-lg border border-[#1e293b] flex items-center gap-1.5 font-mono">
@@ -158,6 +180,20 @@ export const KeyDetailView: React.FC<KeyDetailViewProps> = ({
             </div>
           )}
 
+          {/* Duplicate Key Action */}
+          {!readOnly && (
+            <button
+              onClick={() => {
+                setTargetKey(`${detail.name}_copy`);
+                setIsDuplicating(true);
+              }}
+              className="p-2 rounded-lg bg-sky-500/10 text-sky-400 hover:bg-sky-500/20 border border-sky-500/30 transition-colors"
+              title="Duplicate / Clone Key"
+            >
+              <CopyPlus className="w-4 h-4" />
+            </button>
+          )}
+
           {/* Delete Action */}
           {!readOnly ? (
             <button
@@ -196,6 +232,63 @@ export const KeyDetailView: React.FC<KeyDetailViewProps> = ({
           <StreamView detail={detail} readOnly={readOnly} onRefresh={onRefresh} />
         )}
       </div>
+
+      {/* Duplicate Key Modal */}
+      {isDuplicating && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md bg-[#0e1424] border border-sky-500/40 rounded-2xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sky-400">
+                <CopyPlus className="w-5 h-5" />
+                <h3 className="text-base font-bold text-white">Duplicate Key</h3>
+              </div>
+              <button onClick={() => setIsDuplicating(false)} className="text-slate-500 hover:text-white">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-400">
+              Create an exact deep copy of <code className="text-white font-bold">{detail.name}</code>, preserving its data type, contents, and TTL.
+            </p>
+
+            <form onSubmit={handleDuplicate} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-slate-300">Target Key Name:</label>
+                <input
+                  type="text"
+                  value={targetKey}
+                  onChange={(e) => setTargetKey(e.target.value)}
+                  className="w-full bg-[#101726] border border-[#1e293b] text-xs text-slate-200 rounded-lg p-2.5 font-mono focus:outline-none focus:border-sky-500"
+                  autoFocus
+                />
+              </div>
+
+              {dupError && (
+                <div className="text-xs text-rose-400 bg-rose-500/10 p-2 rounded border border-rose-500/20 font-mono">
+                  {dupError}
+                </div>
+              )}
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsDuplicating(false)}
+                  className="px-4 py-2 rounded-lg bg-[#162035] hover:bg-[#1e293b] text-xs text-slate-300 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={dupLoading}
+                  className="px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-xs font-semibold text-white shadow-lg shadow-sky-900/40 transition-all"
+                >
+                  {dupLoading ? 'Cloning...' : 'Duplicate Now'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

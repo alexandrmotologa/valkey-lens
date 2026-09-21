@@ -6,7 +6,10 @@ import {
   AlertTriangle, 
   Layers, 
   ShieldAlert,
-  ArrowUpRight
+  ArrowUpRight,
+  Sparkles,
+  Copy,
+  Check
 } from 'lucide-react';
 import { api, ProfileReport, formatBytes, NamespaceNode } from '../../api/client';
 
@@ -18,6 +21,13 @@ export const MemoryProfiler: React.FC<MemoryProfilerProps> = ({ onSelectKey }) =
   const [report, setReport] = useState<ProfileReport | null>(null);
   const [loading, setLoading] = useState(false);
   const [selectedNamespace, setSelectedNamespace] = useState<string | null>(null);
+  const [copiedCli, setCopiedCli] = useState<string | null>(null);
+
+  const handleCopyCli = (cmd: string, id: string) => {
+    navigator.clipboard.writeText(cmd);
+    setCopiedCli(id);
+    setTimeout(() => setCopiedCli(null), 2000);
+  };
 
   const loadProfile = async () => {
     setLoading(true);
@@ -145,6 +155,77 @@ export const MemoryProfiler: React.FC<MemoryProfilerProps> = ({ onSelectKey }) =
               <li key={i}>{alert}</li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {/* Automated Memory Optimization Advisor */}
+      {report?.insights && report.insights.length > 0 && (
+        <div className="p-5 rounded-xl bg-[#0f1627] border border-[#1e293b] space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-bold text-white flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-cyan-400" />
+              <span>Automated Memory Optimization Advisor</span>
+              <span className="text-xs bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2 py-0.5 rounded-full font-mono">
+                {report.insights.length} recommendations
+              </span>
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {report.insights.map((insight) => {
+              const sev = (insight.severity || '').toLowerCase();
+              const isCrit = sev === 'critical';
+              const isWarn = sev === 'warning';
+              return (
+                <div
+                  key={insight.id}
+                  className={`p-4 rounded-xl border flex flex-col justify-between space-y-3 ${
+                    isCrit
+                      ? 'bg-rose-500/5 border-rose-500/30'
+                      : isWarn
+                      ? 'bg-amber-500/5 border-amber-500/30'
+                      : 'bg-cyan-500/5 border-cyan-500/30'
+                  }`}
+                >
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase font-mono ${
+                        isCrit
+                          ? 'bg-rose-500/20 text-rose-400 border-rose-500/40'
+                          : isWarn
+                          ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
+                          : 'bg-cyan-500/20 text-cyan-400 border-cyan-500/40'
+                      }`}>
+                        {insight.severity}
+                      </span>
+                      <span className="text-[11px] font-mono text-emerald-400 font-semibold">
+                        Reclaimable: {insight.estimated_reclaimable}
+                      </span>
+                    </div>
+
+                    <h3 className="text-xs font-bold text-white font-sans">{insight.title}</h3>
+                    <p className="text-xs text-slate-400 leading-relaxed font-sans">{insight.description}</p>
+                  </div>
+
+                  {insight.remediation_command && (
+                    <div className="pt-2 border-t border-slate-800 flex items-center justify-between gap-2">
+                      <code className="text-[11px] font-mono text-slate-300 bg-[#090d16] px-2 py-1 rounded border border-slate-800 truncate flex-1">
+                        {insight.remediation_command}
+                      </code>
+                      <button
+                        onClick={() => handleCopyCli(insight.remediation_command!, insight.id)}
+                        className="px-2 py-1 rounded bg-[#162035] hover:bg-[#1e293b] text-slate-300 hover:text-white border border-slate-700 text-xs font-sans flex items-center gap-1 shrink-0"
+                        title="Copy CLI Command"
+                      >
+                        {copiedCli === insight.id ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                        <span>{copiedCli === insight.id ? 'Copied' : 'Copy Fix'}</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
