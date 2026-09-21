@@ -77,7 +77,21 @@ ValkeyLens is a single-binary management studio, non-blocking memory profiler, a
 ### Cluster Topology & 16,384 Hash Slot Visualizer
 
 <p align="center">
-  <img src="docs/images/screenshot_cluster.png?raw=true" alt="ValkeyLens Cluster Topology Map" width="880" />
+  <img src="docs/images/screenshot_cluster.png?raw=true" alt="ValkeyLens Cluster Topology Map" width="880" style="border-radius: 12px; border: 1px solid #1e293b;" />
+</p>
+
+### Stream PEL Inspector & Live 1Hz Telemetry
+
+<p align="center">
+  <img src="docs/images/screenshot_streams.png?raw=true" alt="ValkeyLens Stream Inspector" width="435" />
+  &nbsp;
+  <img src="docs/images/screenshot_telemetry.png?raw=true" alt="ValkeyLens Live Telemetry Monitor" width="435" />
+</p>
+
+### Interactive Web REPL Terminal
+
+<p align="center">
+  <img src="docs/images/screenshot_repl.png?raw=true" alt="ValkeyLens Web REPL Terminal" width="880" style="border-radius: 12px; border: 1px solid #1e293b;" />
 </p>
 
 ## Features

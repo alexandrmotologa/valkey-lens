@@ -4,34 +4,40 @@
       <rect x="24" y="24" width="976" height="976" rx="220" />
     </clipPath>
 
-    <!-- Gradients -->
-    <linearGradient id="cyan-glow" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#00f5ff"/>
+    <!-- Gradients for Volumetric Lighting & Optics -->
+    <linearGradient id="cyan-iris" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="50%" stop-color="#00f5ff"/>
       <stop offset="100%" stop-color="#0284c7"/>
     </linearGradient>
 
-    <linearGradient id="slate-body-light" x1="0%" y1="0%" x2="0%" y2="100%">
+    <linearGradient id="tuft-glow" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#0284c7"/>
+      <stop offset="100%" stop-color="#00f5ff"/>
+    </linearGradient>
+
+    <linearGradient id="facet-lit" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#475569"/>
       <stop offset="100%" stop-color="#334155"/>
     </linearGradient>
 
-    <linearGradient id="slate-body-mid" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#334155"/>
-      <stop offset="100%" stop-color="#1e293b"/>
+    <linearGradient id="facet-bright" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#64748b"/>
+      <stop offset="100%" stop-color="#475569"/>
     </linearGradient>
 
-    <linearGradient id="slate-body-dark" x1="0%" y1="0%" x2="0%" y2="100%">
+    <linearGradient id="facet-shadow" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#1e293b"/>
-      <stop offset="100%" stop-color="#0b0f19"/>
+      <stop offset="100%" stop-color="#0f172a"/>
     </linearGradient>
 
-    <linearGradient id="titanium-muzzle" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#94a3b8"/>
-      <stop offset="100%" stop-color="#64748b"/>
+    <linearGradient id="facet-deep" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#06090e"/>
     </linearGradient>
 
-    <filter id="subtle-shadow" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#000000" flood-opacity="0.16" />
+    <filter id="luxury-shadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#000000" flood-opacity="0.16" />
     </filter>
   </defs>
 
@@ -39,167 +45,228 @@
   <rect x="24" y="24" width="976" height="976" rx="220" fill="#ffffff" stroke="#e2e8f0" stroke-width="6" />
 
   <g clip-path="url(#squircle-clip)">
-    <g transform="translate(512, 512)" filter="url(#subtle-shadow)">
+    <g transform="translate(512, 512)" filter="url(#luxury-shadow)">
 
-      <!-- Hexagonal Architectural Gateway -->
+      <!-- Hexagonal Architectural Gateway (Valkey 16,384 Hash Slot Topology) -->
       <polygon points="
-        0,-390
-        338,-195
-        338,195
-        0,390
-        -338,195
-        -338,-195
-      " fill="none" stroke="#0f172a" stroke-width="40" stroke-linejoin="round" />
+        0,-410
+        355,-205
+        355,205
+        0,410
+        -355,205
+        -355,-205
+      " fill="none" stroke="#0f172a" stroke-width="36" stroke-linejoin="round" />
 
-      <!-- Inner Dashed Cyan Accent Hexagon -->
+      <!-- Inner Telemetry Scan Ring -->
       <polygon points="
-        0,-355
-        307,-177
-        307,177
-        0,355
-        -307,177
-        -307,-177
+        0,-375
+        325,-187
+        325,187
+        0,375
+        -325,187
+        -325,-187
       " fill="none" stroke="#00f5ff" stroke-width="4" opacity="0.45" stroke-dasharray="16, 12" />
 
-      <!-- Watertight Base Silhouette for Apex Lynx -->
+      <!-- 1. Solid Watertight Base Silhouette: Nordic Valkey Lynx -->
       <path d="
-        M 0 -290
-        L 75 -250
-        L 135 -345
-        L 165 -360
-        L 160 -290
-        L 185 -160
-        L 245 -40
-        L 270 90
-        L 220 180
-        L 150 255
-        L 90 280
-        L 0 295
-        L -90 280
-        L -150 255
-        L -220 180
-        L -270 90
-        L -245 -40
-        L -185 -160
-        L -160 -290
-        L -165 -360
-        L -135 -345
-        L -75 -250
+        M 0,-255
+        L 68,-230
+        L 125,-245
+        L 190,-415
+        L 205,-440
+        L 218,-350
+        L 248,-185
+        L 288,-70
+        L 328,25
+        L 298,90
+        L 318,155
+        L 248,240
+        L 120,315
+        L 0,340
+        L -120,315
+        L -248,240
+        L -318,155
+        L -298,90
+        L -328,25
+        L -288,-70
+        L -248,-185
+        L -218,-350
+        L -205,-440
+        L -190,-415
+        L -125,-245
+        L -68,-230
         Z
-      " fill="#0b0f19" />
+      " fill="#070a10" />
 
-      <!-- Lynx Ear Tuft Accents (Top Brush) -->
-      <polygon points="135,-345 165,-360 160,-290 145,-305" fill="#00f5ff" opacity="0.9" />
-      <polygon points="-135,-345 -165,-360 -160,-290 -145,-305" fill="#00f5ff" opacity="0.9" />
+      <!-- 2. Ear Tufts: Iconic Nordic Lynx Feathers -->
+      <!-- Right Ear Tuft (Lit side) -->
+      <polygon points="125,-245 190,-415 205,-440 170,-325" fill="#0284c7" />
+      <polygon points="190,-415 205,-440 218,-350" fill="url(#tuft-glow)" />
+      <polygon points="170,-325 205,-440 218,-350" fill="#0f172a" />
 
-      <!-- Crown & Brow Facets -->
-      <polygon points="0,-290 75,-250 45,-190 0,-215" fill="url(#slate-body-light)" />
-      <polygon points="0,-290 -75,-250 -45,-190 0,-215" fill="url(#slate-body-mid)" />
+      <!-- Left Ear Tuft (Shadow side) -->
+      <polygon points="-125,-245 -190,-415 -205,-440 -170,-325" fill="#0369a1" />
+      <polygon points="-190,-415 -205,-440 -218,-350" fill="#0284c7" />
+      <polygon points="-170,-325 -205,-440 -218,-350" fill="#06090e" />
 
-      <polygon points="75,-250 145,-305 130,-210 45,-190" fill="url(#slate-body-mid)" />
-      <polygon points="-75,-250 -145,-305 -130,-210 -45,-190" fill="url(#slate-body-dark)" />
+      <!-- Ear Shells -->
+      <polygon points="125,-245 170,-325 218,-350 195,-215" fill="url(#facet-shadow)" />
+      <polygon points="125,-245 195,-215 140,-175" fill="url(#facet-lit)" />
+      <polygon points="140,-175 195,-215 170,-130" fill="#00f5ff" opacity="0.25" />
 
-      <!-- Outer Ear Structure -->
-      <polygon points="145,-305 160,-290 185,-160 130,-210" fill="url(#slate-body-dark)" />
-      <polygon points="-145,-305 -160,-290 -185,-160 -130,-210" fill="url(#slate-body-dark)" />
+      <polygon points="-125,-245 -170,-325 -218,-350 -195,-215" fill="url(#facet-deep)" />
+      <polygon points="-125,-245 -195,-215 -140,-175" fill="url(#facet-shadow)" />
+      <polygon points="-140,-175 -195,-215 -170,-130" fill="#0284c7" opacity="0.2" />
 
-      <!-- Inner Ear Cyan Aperture Cavity -->
-      <polygon points="75,-250 130,-210 100,-185" fill="#00f5ff" opacity="0.25" />
-      <polygon points="-75,-250 -130,-210 -100,-185" fill="#00f5ff" opacity="0.18" />
+      <!-- Crown & Brow Plates -->
+      <polygon points="0,-255 68,-230 65,-155 0,-175" fill="url(#facet-lit)" />
+      <polygon points="0,-255 -68,-230 -65,-155 0,-175" fill="url(#facet-shadow)" />
 
-      <!-- Forehead & Center Brow (Observability Core) -->
-      <polygon points="0,-215 45,-190 0,-115" fill="url(#slate-body-light)" />
-      <polygon points="0,-215 -45,-190 0,-115" fill="url(#slate-body-mid)" />
+      <polygon points="68,-230 125,-245 140,-175 65,-155" fill="url(#facet-bright)" />
+      <polygon points="-68,-230 -125,-245 -140,-175 -65,-155" fill="url(#facet-deep)" />
 
-      <polygon points="45,-190 100,-185 85,-105 0,-115" fill="url(#slate-body-mid)" />
-      <polygon points="-45,-190 -100,-185 -85,-105 0,-115" fill="url(#slate-body-dark)" />
+      <!-- Forehead Central Diamond & Lens Telemetry Sensor -->
+      <polygon points="0,-175 65,-155 55,-90 0,-110" fill="#1e293b" />
+      <polygon points="0,-175 -65,-155 -55,-90 0,-110" fill="#0f172a" />
+      <polygon points="0,-110 55,-90 0,-50 -55,-90" fill="#0b0f19" />
 
-      <!-- Temple & Upper Cheekbones -->
-      <polygon points="100,-185 185,-160 170,-70 85,-105" fill="url(#slate-body-light)" />
-      <polygon points="-100,-185 -185,-160 -170,-70 -85,-105" fill="url(#slate-body-dark)" />
+      <!-- Concentric Telemetry Lens Aperture (The Observability Eye) -->
+      <circle cx="0" cy="-90" r="16" fill="#070a10" stroke="#00f5ff" stroke-width="4" />
+      <circle cx="0" cy="-90" r="8" fill="#0f172a" stroke="#38bdf8" stroke-width="2" />
+      <circle cx="0" cy="-90" r="3.5" fill="#00f5ff" />
 
-      <polygon points="185,-160 245,-40 180,-10 170,-70" fill="url(#slate-body-mid)" />
-      <polygon points="-185,-160 -245,-40 -180,-10 -170,-70" fill="url(#slate-body-dark)" />
+      <!-- Temples & Orbital Rims -->
+      <polygon points="140,-175 248,-185 195,-105" fill="url(#facet-lit)" />
+      <polygon points="65,-155 140,-175 195,-105 130,-80" fill="url(#facet-bright)" />
 
-      <!-- Mid Bridge & Nose Core -->
-      <polygon points="0,-115 40,-75 0,15" fill="url(#slate-body-light)" />
-      <polygon points="0,-115 -40,-75 0,15" fill="url(#slate-body-mid)" />
+      <polygon points="-140,-175 -248,-185 -195,-105" fill="url(#facet-deep)" />
+      <polygon points="-65,-155 -140,-175 -195,-105 -130,-80" fill="url(#facet-shadow)" />
 
-      <!-- Almond Predator Eyes (Observability Lens Optics) -->
-      <!-- Left Eye Socket -->
-      <polygon points="-40,-75 -85,-105 -135,-65 -80,-45" fill="#0b0f19" />
-      <!-- Left Glowing Cyan Eye -->
-      <polygon points="-48,-70 -82,-92 -125,-65 -78,-50" fill="url(#cyan-glow)" />
-      <!-- Left Aperture Pupil & Focus -->
-      <polygon points="-75,-78 -88,-70 -78,-62" fill="#0b0f19" />
-      <circle cx="-82" cy="-70" r="4" fill="#ffffff" />
+      <!-- Brow Ridge (Imparts Focused Predatory Cant) -->
+      <polygon points="55,-90 130,-80 142,-55 48,-35" fill="#1e293b" />
+      <polygon points="-55,-90 -130,-80 -142,-55 -48,-35" fill="#0f172a" />
 
-      <!-- Right Eye Socket -->
-      <polygon points="40,-75 85,-105 135,-65 80,-45" fill="#0b0f19" />
-      <!-- Right Glowing Cyan Eye -->
-      <polygon points="48,-70 82,-92 125,-65 78,-50" fill="url(#cyan-glow)" />
-      <!-- Right Aperture Pupil & Focus -->
-      <polygon points="75,-78 88,-70 78,-62" fill="#0b0f19" />
-      <circle cx="82" cy="-70" r="4" fill="#ffffff" />
+      <!-- ================= PREDATOR OPTICS (ALMOND SHAPE) ================= -->
+      <!-- Right Eye Snug Socket Rim -->
+      <path d="
+        M 46,-30
+        Q 95,-60 144,-50
+        Q 95,-12 46,-30
+        Z
+      " fill="#070a10" />
+      <!-- Right Eye Almond Sclera & Iris (Electric Cyan) -->
+      <path d="
+        M 52,-32
+        Q 95,-55 138,-47
+        Q 95,-18 52,-32
+        Z
+      " fill="url(#cyan-iris)" />
+      <!-- Right Slit Pupil (Piercing Predator Vertical Eye) -->
+      <polygon points="90,-50 98,-48 96,-25 88,-27" fill="#070a10" />
+      <!-- Specular Highlight Point -->
+      <circle cx="84" cy="-40" r="2.5" fill="#ffffff" />
 
-      <!-- Under-Eye Geometric Facets -->
-      <polygon points="40,-75 80,-45 45,-5 0,15" fill="url(#slate-body-light)" />
-      <polygon points="-40,-75 -80,-45 -45,-5 0,15" fill="url(#slate-body-mid)" />
+      <!-- Left Eye Snug Socket Rim -->
+      <path d="
+        M -46,-30
+        Q -95,-60 -144,-50
+        Q -95,-12 -46,-30
+        Z
+      " fill="#06090e" />
+      <!-- Left Eye Almond Sclera & Iris (Electric Cyan) -->
+      <path d="
+        M -52,-32
+        Q -95,-55 -138,-47
+        Q -95,-18 -52,-32
+        Z
+      " fill="url(#cyan-iris)" />
+      <!-- Left Slit Pupil -->
+      <polygon points="-90,-50 -98,-48 -96,-25 -88,-27" fill="#06090e" />
+      <!-- Specular Highlight Point -->
+      <circle cx="-84" cy="-40" r="2.5" fill="#ffffff" />
 
-      <polygon points="80,-45 135,-65 140,15 45,-5" fill="url(#slate-body-mid)" />
-      <polygon points="-80,-45 -135,-65 -140,15 -45,-5" fill="url(#slate-body-dark)" />
+      <!-- Upper Cheekbone directly under eyes -->
+      <polygon points="46,-30 144,-50 140,-15 95,15 45,35 35,-10" fill="url(#facet-lit)" />
+      <polygon points="-46,-30 -144,-50 -140,-15 -95,15 -45,35 -35,-10" fill="url(#facet-shadow)" />
 
-      <!-- Wide Lynx Flared Cheek Ruffs (Signature Field Mark) -->
-      <polygon points="170,-70 180,-10 245,-40 270,90 190,75" fill="url(#slate-body-light)" />
-      <polygon points="-170,-70 -180,-10 -245,-40 -270,90 -190,75" fill="url(#slate-body-dark)" />
+      <!-- ================= NOSE & SNOUT ================= -->
+      <!-- Nose Bridge -->
+      <polygon points="0,-50 45,-48 35,35 0,25" fill="url(#facet-lit)" />
+      <polygon points="0,-50 -45,-48 -35,35 0,25" fill="url(#facet-shadow)" />
 
-      <polygon points="180,-10 140,15 190,75" fill="url(#slate-body-mid)" />
-      <polygon points="-180,-10 -140,15 -190,75" fill="url(#slate-body-dark)" />
+      <!-- Nasal Flanks -->
+      <polygon points="45,-48 50,-18 95,20 35,35" fill="url(#facet-bright)" />
+      <polygon points="-45,-48 -50,-18 -95,20 -35,35" fill="url(#facet-deep)" />
 
-      <polygon points="190,75 270,90 220,180 160,150" fill="url(#slate-body-mid)" />
-      <polygon points="-190,75 -270,90 -220,180 -160,150" fill="url(#slate-body-dark)" />
+      <!-- Muzzle & Whisker Pads (Refined Lateral Slate Planes, No Buck Teeth) -->
+      <polygon points="0,25 35,35 48,70 0,60" fill="#64748b" />
+      <polygon points="0,25 -35,35 -48,70 0,60" fill="#334155" />
 
-      <!-- Geometric Slate Muzzle (No Buck Teeth, Horizontal Refinement) -->
-      <!-- Nose Leather -->
-      <polygon points="0,15 28,38 0,55 -28,38" fill="#0f172a" />
-      <polygon points="0,22 18,36 0,48 -18,36" fill="#00f5ff" opacity="0.75" />
+      <polygon points="35,35 95,20 115,75 48,70" fill="#475569" />
+      <polygon points="-35,35 -95,20 -115,75 -48,70" fill="#1e293b" />
 
-      <!-- Whisker Pads & Muzzle Slates -->
-      <polygon points="0,55 28,38 75,55 45,100 0,95" fill="url(#titanium-muzzle)" />
-      <polygon points="0,55 -28,38 -75,55 -45,100 0,95" fill="url(#titanium-muzzle)" />
+      <!-- Compact Obsidian Nose Tip with Cyan Accent Underline -->
+      <polygon points="0,60 26,62 0,85 -26,62" fill="#0b0f19" />
+      <polygon points="0,60 22,62 0,80 -22,62" fill="#070a10" stroke="#00f5ff" stroke-width="1.8" />
 
-      <polygon points="28,38 45,-5 140,15 110,95 75,55" fill="url(#slate-body-light)" />
-      <polygon points="-28,38 -45,-5 -140,15 -110,95 -75,55" fill="url(#slate-body-mid)" />
+      <!-- Whisker Pad Lateral Expansion -->
+      <polygon points="0,85 26,62 48,70 95,100 48,130 0,110" fill="#475569" />
+      <polygon points="0,85 -26,62 -48,70 -95,100 -48,130 0,110" fill="#1e293b" />
 
-      <!-- Chin & Lower Ruff Structure -->
-      <polygon points="0,95 45,100 25,145 0,155" fill="url(#slate-body-mid)" />
-      <polygon points="0,95 -45,100 -25,145 0,155" fill="url(#slate-body-dark)" />
+      <polygon points="48,70 115,75 150,135 95,100" fill="#64748b" />
+      <polygon points="-48,70 -115,75 -150,135 -95,100" fill="#0f172a" />
 
-      <polygon points="45,100 110,95 125,170 25,145" fill="url(#slate-body-mid)" />
-      <polygon points="-45,100 -110,95 -125,170 -25,145" fill="url(#slate-body-dark)" />
+      <!-- ================= FLARED ZYGOMATIC CHEEKS (LYNX RUFFS) ================= -->
+      <!-- Right Flared Fur Spikes -->
+      <polygon points="195,-105 248,-185 288,-70 215,-25" fill="url(#facet-shadow)" />
+      <polygon points="130,-80 195,-105 215,-25 145,-45" fill="url(#facet-lit)" />
 
-      <polygon points="110,95 160,150 125,170" fill="url(#slate-body-dark)" />
-      <polygon points="-110,95 -160,150 -125,170" fill="url(#slate-body-dark)" />
+      <polygon points="215,-25 288,-70 328,25 235,45" fill="url(#facet-bright)" />
+      <polygon points="145,-45 215,-25 235,45 135,-15" fill="url(#facet-lit)" />
 
-      <!-- Neck & Chest Obsidian Armor (Data Flow Vectors) -->
-      <polygon points="0,155 25,145 75,220 0,250" fill="url(#slate-body-light)" />
-      <polygon points="0,155 -25,145 -75,220 0,250" fill="url(#slate-body-mid)" />
+      <polygon points="135,-15 235,45 240,115 95,20" fill="url(#facet-shadow)" />
+      <polygon points="235,45 328,25 298,90 240,115" fill="url(#facet-bright)" />
 
-      <polygon points="25,145 125,170 150,255 75,220" fill="url(#slate-body-mid)" />
-      <polygon points="-25,145 -125,170 -150,255 -75,220" fill="url(#slate-body-dark)" />
+      <polygon points="240,115 298,90 318,155 220,185" fill="url(#facet-lit)" />
+      <polygon points="95,20 240,115 220,185 150,135" fill="url(#facet-bright)" />
+      <polygon points="150,135 220,185 248,240 130,225" fill="url(#facet-shadow)" />
 
-      <polygon points="125,170 220,180 150,255" fill="url(#slate-body-dark)" />
-      <polygon points="-125,170 -220,180 -150,255" fill="url(#slate-body-dark)" />
+      <!-- Left Flared Fur Spikes -->
+      <polygon points="-195,-105 -248,-185 -288,-70 -215,-25" fill="url(#facet-deep)" />
+      <polygon points="-130,-80 -195,-105 -215,-25 -145,-45" fill="url(#facet-shadow)" />
 
-      <!-- Lower Hex Apex Vane -->
-      <polygon points="0,250 75,220 90,280 0,295" fill="url(#slate-body-mid)" />
-      <polygon points="0,250 -75,220 -90,280 0,295" fill="url(#slate-body-dark)" />
-      <polygon points="75,220 150,255 90,280" fill="url(#slate-body-dark)" />
-      <polygon points="-75,220 -150,255 -90,280" fill="url(#slate-body-dark)" />
+      <polygon points="-215,-25 -288,-70 -328,25 -235,45" fill="url(#facet-shadow)" />
+      <polygon points="-145,-45 -215,-25 -235,45 -135,-15" fill="url(#facet-deep)" />
 
-      <!-- Subtle Cyan Focus Ring on Forehead (RESP3 Engine Pulse) -->
-      <circle cx="0" cy="-115" r="8" fill="none" stroke="#00f5ff" stroke-width="2.5" opacity="0.8" />
-      <circle cx="0" cy="-115" r="3" fill="#00f5ff" opacity="0.9" />
+      <polygon points="-135,-15 -235,45 -240,115 -95,20" fill="url(#facet-deep)" />
+      <polygon points="-235,45 -328,25 -298,90 -240,115" fill="url(#facet-shadow)" />
+
+      <polygon points="-240,115 -298,90 -318,155 -220,185" fill="url(#facet-shadow)" />
+      <polygon points="-95,20 -240,115 -220,185 -150,135" fill="url(#facet-deep)" />
+      <polygon points="-150,135 -220,185 -248,240 -130,225" fill="url(#facet-deep)" />
+
+      <!-- ================= CHIN & LOWER JAW ================= -->
+      <!-- Chin Median -->
+      <polygon points="0,110 48,130 35,185 0,170" fill="url(#facet-lit)" />
+      <polygon points="0,110 -48,130 -35,185 0,170" fill="url(#facet-deep)" />
+
+      <polygon points="48,130 95,100 150,135 130,225 75,200 35,185" fill="url(#facet-bright)" />
+      <polygon points="-48,130 -95,100 -150,135 -130,225 -75,200 -35,185" fill="url(#facet-deep)" />
+
+      <!-- Chin Taper & Apex -->
+      <polygon points="0,170 35,185 45,265 0,285" fill="url(#facet-shadow)" />
+      <polygon points="0,170 -35,185 -45,265 0,285" fill="url(#facet-deep)" />
+
+      <polygon points="35,185 75,200 130,225 120,315 55,295 45,265" fill="url(#facet-shadow)" />
+      <polygon points="-35,185 -75,200 -130,225 -120,315 -55,295 -45,265" fill="url(#facet-deep)" />
+
+      <polygon points="0,285 55,295 120,315 0,340" fill="url(#facet-shadow)" />
+      <polygon points="0,285 -55,295 -120,315 0,340" fill="url(#facet-deep)" />
+
+      <!-- Cyan Inlay Core (Active Shard Node) -->
+      <polygon points="0,205 18,228 0,250 -18,228" fill="url(#cyan-iris)" />
+      <circle cx="0" cy="228" r="3" fill="#ffffff" />
+
     </g>
   </g>
 </svg>

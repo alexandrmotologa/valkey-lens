@@ -1,4 +1,4 @@
-# FFmpeg concat inputs for ValkeyLens 2.0 Feature Pack demo GIF
+# FFmpeg concat inputs for ValkeyLens comprehensive studio demo GIF
 Set-Location B:\workgit\valkey-lens\docs\images
 
 $concatContent = @"
@@ -16,12 +16,18 @@ file 'screenshot_pubsub.png'
 duration 2.5
 file 'screenshot_cluster.png'
 duration 2.5
-file 'screenshot_cluster.png'
+file 'screenshot_streams.png'
+duration 2.5
+file 'screenshot_telemetry.png'
+duration 2.5
+file 'screenshot_repl.png'
+duration 2.5
+file 'screenshot_repl.png'
 "@
 
 Set-Content -Path "concat_frames.txt" -Value $concatContent
 
-# Generate palette and encode optimized animated GIF
+# Generate palette and encode optimized animated GIF with Lanczos scaling
 ffmpeg -y -f concat -safe 0 -i concat_frames.txt -vf "scale=1080:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=128:reserve_transparent=0:stats_mode=diff[p];[s1][p]paletteuse=dither=bayer:bayer_scale=3" valkeylens_demo.gif
 
 Remove-Item "concat_frames.txt"

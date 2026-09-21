@@ -1,4 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+const fs = require('fs');
+const path = require('path');
+const { Resvg } = require('@resvg/resvg-js');
+
+function buildLogoSvg() {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
   <defs>
     <clipPath id="squircle-clip">
       <rect x="24" y="24" width="976" height="976" rx="220" />
@@ -269,4 +274,31 @@
 
     </g>
   </g>
-</svg>
+</svg>`;
+}
+
+async function main() {
+  const outputDir = path.join(__dirname, '..', 'docs', 'images');
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
+  }
+
+  const svg = buildLogoSvg();
+  const svgPath = path.join(outputDir, 'logo.svg');
+  const pngPath = path.join(outputDir, 'logo.png');
+
+  fs.writeFileSync(svgPath, svg, 'utf8');
+  console.log('Written SVG to', svgPath);
+
+  const resvg = new Resvg(svg, {
+    fitTo: { mode: 'width', value: 1024 }
+  });
+  const pngData = resvg.render().asPng();
+  fs.writeFileSync(pngPath, pngData);
+  console.log('Rendered 1024x1024 PNG to', pngPath, '(' + pngData.length + ' bytes)');
+}
+
+main().catch(err => {
+  console.error(err);
+  process.exit(1);
+});
